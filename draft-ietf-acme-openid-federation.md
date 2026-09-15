@@ -487,22 +487,31 @@ Identifier from the `newOrder` request).
    OpenIdFederationEntityId ::= UTF8String
 ~~~~
 
-# Certificate Lifecycle
+# Trust Chain Expiration and Authorization Lifetime {#trust-chain-expiration}
 
 The identity of the Requestor is verified through proof of possession of a
 private key corresponding to a public key attested within a Trust Chain. The
 Trust Chain has an expiration time, and its content MUST NOT be trusted past the
 expiration time ({{Section 10.2 of OPENID-FED}}{: relative="#section-10.2"}).
 
-The `notBefore` and `notAfter` fields of issued certificates MUST represent
-dates before the Trust Chain's expiration time. If the Requestor's newOrder
-request ({{Section 7.4 of !RFC8555}}) contains `notAfter` or `notBefore` fields
-that make this impossible, the Certificate Issuer MUST reply with an error of
-type `urn:ietf:params:acme:error:openIDFederationCertificateValidity`.
+A successful `openid-federation-01` challenge results in an ACME authorization
+({{Section 7.1.4 of !RFC8555}}) whose only evidence is the Trust Chain. Since the
+content of the Trust Chain cannot be trusted after its expiration time, the Certificate
+Issuer MUST set the `expires` field of such an authorization to a time no later
+than the expiration time of the Trust Chain used to validate the challenge.
+
+According to {{Section 7.1.6 of !RFC8555}}, after the `expires` time, the 
+authorization moves to the "expired" state, and an order that still depends on it 
+moves to the "invalid" state. A later order for the same ACME Identifier therefore 
+requires a new authorization, validated with a Trust Chain that has not expired.
+
+The validity period and the lifecycle of the issued certificate are determined
+by the certificate profile and by the policy of the Certificate Issuer, and are
+out of scope for this document.
 
 # Errors {#error-type}
 
-This document defines two new error type URIs to be used in problem documents
+This document defines a new error type URI to be used in problem documents
 {{!RFC9457}}, as described in {{Section 6.7 of !RFC8555}}.
 
 The error type `urn:ietf:params:acme:error:openIDFederationEntity` is used to
@@ -514,10 +523,6 @@ error type SHOULD include an extension member named `error_code`, which MUST be
 set to the OAuth error code, taken from the error codes defined in
 {{Section 8.9 of OPENID-FED}}{: relative="#section-8.9"}.
 
-The error type `urn:ietf:params:acme:error:openIDFederationCertificateValidity`
-is used to indicate that a Certificate could not be issued because of a mismatch
-between the requested period of validity and the expiration of the OpenID
-Federation Trust Chain.
 
 # Security Considerations
 
@@ -534,6 +539,19 @@ considered.
 
 The cryptographic keys in the `acme_requestor` metadata SHOULD be rotated
 periodically.
+
+The `expires` field of the authorization resulting from an
+`openid-federation-01` challenge bounds how long the Certificate Issuer relies
+on a given Trust Chain ({{trust-chain-expiration}}). As with the other ACME
+challenge types, the challenge proves control of the ACME Identifier at a point
+in time, while the issued certificate remains valid for the period set by the
+Certificate Issuer, and what happens to the certificate afterwards is handled by
+the X.509 ecosystem in which the certificate is used.
+
+Deployments that want the lifecycle of the issued certificates to be bound to the
+federation membership of the Requestor could rely on the certificate lifecycle
+mechanisms of that ecosystem, according to the applicable certificate policy.
+Those mechanisms are outside the scope of this document.
 
 # IANA Considerations
 
@@ -573,7 +591,6 @@ in {{Section 9.7.4 of !RFC8555}}, the entry below, as specified here in
 |Type|Description|Reference|
 |----|-----------|---------|
 |openIDFederationEntity|An error occurred while resolving an OpenID Federation entity|this document|
-|openIDFederationCertificateValidity|A certificate was requested whose validity period is not before the OpenID Federation Trust Chain's expiry|this document|
 
 ## Assign X.509 PKIX Other Name
 
