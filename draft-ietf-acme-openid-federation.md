@@ -502,7 +502,7 @@ than the expiration time of the Trust Chain used to validate the challenge.
 
 According to {{Section 7.1.6 of !RFC8555}}, after the `expires` time, the 
 authorization moves to the "expired" state, and an order that still depends on it 
-moves to the "invalid" state. A later order for the same ACME Identifier therefore 
+moves to the "invalid" state. A later order for the same ACME Identifier therefore
 requires a new authorization, validated with a Trust Chain that has not expired.
 
 The validity period and the lifecycle of the issued certificate are determined
