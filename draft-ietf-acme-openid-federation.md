@@ -51,9 +51,9 @@ contributor:
 
 normative:
   OPENID-FED:
-    title: "OpenID Federation 1.0 - draft 43"
-    target: https://openid.net/specs/openid-federation-1_0-43.html
-    date: 2025-06-02
+    title: "OpenID Federation 1.0"
+    target: https://openid.net/specs/openid-federation-1_0.html
+    date: 2026-02-17
     author:
       -
         ins: R. Hedberg
@@ -492,18 +492,20 @@ Identifier from the `newOrder` request).
 The identity of the Requestor is verified through proof of possession of a
 private key corresponding to a public key attested within a Trust Chain. The
 Trust Chain has an expiration time, and its content MUST NOT be trusted past the
-expiration time ({{Section 10.2 of OPENID-FED}}{: relative="#section-10.2"}).
+expiration time ({{Section 10.4 of OPENID-FED}}{: relative="#section-10.4"}).
 
 A successful `openid-federation-01` challenge results in an ACME authorization
-({{Section 7.1.4 of !RFC8555}}) whose only evidence is the Trust Chain. Since the
-content of the Trust Chain cannot be trusted after its expiration time, the Certificate
-Issuer MUST set the `expires` field of such an authorization to a time no later
-than the expiration time of the Trust Chain used to validate the challenge.
+({{Section 7.1.4 of !RFC8555}}) whose federation-membership evidence is the Trust
+Chain used to validate the challenge. Since the content of the Trust Chain cannot
+be trusted after its expiration time, the Certificate Issuer MUST set the
+`expires` field of such an authorization to a time no later than the expiration
+time of that Trust Chain.
 
-According to {{Section 7.1.6 of !RFC8555}}, after the `expires` time, the 
-authorization moves to the "expired" state, and an order that still depends on it 
-moves to the "invalid" state. A later order for the same ACME Identifier therefore
-requires a new authorization, validated with a Trust Chain that has not expired.
+According to {{Section 7.1.6 of !RFC8555}}, after the `expires` time the
+authorization moves to the "expired" state. An order that has not yet been
+finalized and that still depends on that authorization then moves to the
+"invalid" state. A later order for the same ACME Identifier therefore requires a
+new authorization, validated with a Trust Chain that has not expired.
 
 The validity period and the lifecycle of the issued certificate are determined
 by the certificate profile and by the policy of the Certificate Issuer, and are
@@ -522,7 +524,6 @@ particular OAuth error code that caused the error. The problem document for this
 error type SHOULD include an extension member named `error_code`, which MUST be
 set to the OAuth error code, taken from the error codes defined in
 {{Section 8.9 of OPENID-FED}}{: relative="#section-8.9"}.
-
 
 # Security Considerations
 
